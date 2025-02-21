@@ -1,0 +1,30 @@
+ creating the socket:  waiting for client : client is connected 
+Recieved 477 bytes. GET / HTTP/1.1
+Host: 192.168.0.107:8080
+Connection: keep-alive
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,bn;q=0.8,ja;q=0.7
+
+
+Message complete
+parsed :confetti: 
+sending response: 
+client is connected 
+Recieved 398 bytes. GET /favicon.ico HTTP/1.1
+Host: 192.168.0.107:8080
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Referer: http://192.168.0.107:8080/
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,bn;q=0.8,ja;q=0.7
+
+-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,bn;q=0.8,ja;q=0.7
+
+
+Message complete
