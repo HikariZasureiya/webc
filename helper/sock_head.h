@@ -5,11 +5,12 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<netdb.h>
+#include<sys/types.h>
 #include<unistd.h>
 #include<errno.h>
 #include<string.h>
 #include<sys/signal.h>
-
+#define BUFF_SIZE 1000000
 
 
 /* struct for the socket */
@@ -47,6 +48,9 @@ void ret_addrinfo(struct addrinfo **bind_address , char* port){
 int make_socket(struct addrinfo **bind_address){
   socklen_t addrlen;
   int socket_listen = socket( (*bind_address) -> ai_family , (*bind_address) -> ai_socktype ,   (*bind_address) -> ai_protocol ); 
+  int rcvbuf = BUFF_SIZE;
+  setsockopt(socket_listen, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf));
+
   
   if( bind( socket_listen , (*bind_address)->ai_addr , (*bind_address)->ai_addrlen )){
       printf("error \n" );
