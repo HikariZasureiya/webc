@@ -1,10 +1,11 @@
-#include "helper/sock_head.h"
-#include "helper/http_parser.h"
+#include "headers/sock_head.h"
+#include "headers/http_parser.h"
 #include <sys/epoll.h>
 #define MAX_SIZE 16192
 #include<fcntl.h>
 #include<errno.h>
-#include "urls.h"
+#include"headers/url_register.h"
+#include "headers/url_dist.h"
 #define MAX_EVENTS 100
 
 struct epoll_event ev, events[MAX_EVENTS];
@@ -16,6 +17,11 @@ llhttp_ps *ps;
 
 struct sockaddr_storage client_address;
 socklen_t client_len = sizeof(client_address);
+
+void sigpipe_handler(int signum) {
+    printf("Caught SIGPIPE! signum: %d\n", signum);
+}
+
 
 void interrupt_handler() {
     printf("\nInterrupt detected. Exiting...\n");
@@ -84,6 +90,7 @@ int main() {
     http_parser_init(ps);
 
     printf("Waiting for clients...\n");
+    signal(SIGPIPE, sigpipe_handler);
     signal(SIGINT, interrupt_handler);
 
     while (1) {
@@ -142,8 +149,7 @@ int main() {
 
                 parsed_creds new_creds = parser_execute(&(ps->parser), request);
                 llhttp_reset(&(ps->parser));
-                // printf("idk man: %ld\n" ,  strlen(new_creds.url));
-                // printf("idk man1: %s\n" ,  new_creds.method);
+        
                 char filename[MAX_SIZE];
                 snprintf(filename, MAX_SIZE, "%s", find_route(new_creds.url));
                 if(strcmp(filename , "") == 0){

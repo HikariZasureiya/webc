@@ -1,23 +1,5 @@
-#include<stdio.h>
-#include<stdbool.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/types.h>
-#include<string.h>
-#define MAX_ROUTE 400
-#define NAME_LEN 1000
-#define PATH_LEN 3000
-
-typedef struct path{
-    char route_name[NAME_LEN];
-    char source_path[PATH_LEN];
-    struct path* connected[MAX_ROUTE];
-    int level;
-    int connected_no;
-} path; 
-
-extern path * route_node;
-
+#include "../headers/url_register.h"
+#include "../headers/url_dist.h"
 
 bool file_exists(char * filename){
     if(access(filename , R_OK) == -1 ){
@@ -125,14 +107,42 @@ void route_dfs(path * route_node){
     return;
 } 
 
+/* url_dist.h*/
 
+path * search_url(path * route_node ,  char ** tok_arr , int len){
+    if( route_node == NULL ){
+        return NULL;
+    }
+    int i=0;
+    path * current = route_node;
+    while( i < len){
+        int temp = current->connected_no;
+        int flag = 0;
+        for(int j=0; j<temp; j++){
+            if(current->connected[j]){
+                if(strcmp(current->connected[j]->route_name , tok_arr[i]) == 0 ){
+                    current = current->connected[j];
+                    flag = 1;
+                    break;
+                }
+            }
+        }
+        if(flag == 0){
+            return NULL;
+        }
+        i++;
+    }
+    return current;
+}
 
-
-
-
-
-
-
-
+char* find_route(char * url){
+    int len;
+    char ** tok_arr = url_tokens(url , &len);
+    path * route_curr = search_url(route_node , tok_arr , len);
+    if(route_curr)
+        return route_curr->source_path;
+    
+    return "";
+}
 
 
