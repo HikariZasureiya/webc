@@ -1,9 +1,15 @@
+/* TODO 
+.check how to send static files
+.HTTP
+*/
+
 #include "headers/sock_head.h"
 #include "headers/http_parser.h"
 #include <sys/epoll.h>
 #define MAX_SIZE 16192
 #include<fcntl.h>
 #include<errno.h>
+#include<sys/sendfile.h>
 #include"headers/url_register.h"
 #include "headers/url_dist.h"
 #define MAX_EVENTS 100
@@ -15,11 +21,8 @@ sock_creds *socket_cred;
 llhttp_ps *ps;
 
 
-struct sockaddr_storage client_address;
-socklen_t client_len = sizeof(client_address);
-
 void sigpipe_handler(int signum) {
-    printf("Caught SIGPIPE! signum: %d\n", signum);
+    printf("Caught SIGPIPE!\n");
 }
 
 
@@ -38,14 +41,12 @@ void set_nonblocking(int sock) {
 }
 
 int send_file_to_client(char * filename , int client_sock ){
-    FILE *fptr = fopen(filename, "r");
+    int fptr = open(filename, O_RDONLY);
     if (!fptr) {
         perror("Failed to open file\n");
         return 1;
         }
-        char html_file[10294] = {0};
-        fread(html_file, 1, sizeof(html_file) - 1, fptr);
-        fclose(fptr);
+
         if (fcntl(client_sock, F_GETFD) == -1 && errno == EBADF) {
             printf("Skipping send: Socket %d is closed.\n", client_sock);
             } else {
@@ -55,10 +56,11 @@ int send_file_to_client(char * filename , int client_sock ){
                     "Connection: close\r\n\r\n";
 
                 send(client_sock, response, strlen(response), 0);
-                send(client_sock, html_file, strlen(html_file), 0);
+                sendfile(client_sock , fptr , NULL , MAX_SIZE);
                 epoll_ctl(epollfd, EPOLL_CTL_DEL, client_sock, NULL);
                 close(client_sock);
         }
+       close(fptr); 
     return 0;
 }
 
@@ -102,7 +104,8 @@ int main() {
 
         for (int i = 0; i < event_count; i++) {
             if (events[i].data.fd == socket_cred->socket_id) {
-                
+                struct sockaddr_storage client_address;
+                socklen_t client_len = sizeof(client_address);
                 // Accept new client
                 int sock_client = accept(socket_cred->socket_id, (struct sockaddr*)&client_address, &client_len);
                 if (sock_client == -1) {
@@ -161,8 +164,7 @@ int main() {
                     }              
                    
                 }
-                
-                
+                    
                 else{
                     printf("filename : %s\n" , filename);
                     int err = send_file_to_client(filename , client_sock);

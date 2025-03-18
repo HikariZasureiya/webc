@@ -1,5 +1,6 @@
 #include "../headers/url_register.h"
 #include "../headers/url_dist.h"
+#include<fcntl.h>
 
 bool file_exists(char * filename){
     if(access(filename , R_OK) == -1 ){
@@ -65,6 +66,10 @@ path * add_search(path ** route_node , char ** tok_arr , int len){
         while( i < len){
             int temp = current->connected_no;
             int flag = 0;
+            if(strcmp(tok_arr[i] , "static") == 0){
+                printf("cannot add static as route\n");
+                exit(1);
+            }
             for(int j=0; j<temp; j++){
                 if(current->connected[j]){
                     if(strcmp(current->connected[j]->route_name , tok_arr[i]) == 0 ){
@@ -135,6 +140,15 @@ path * search_url(path * route_node ,  char ** tok_arr , int len){
     return current;
 }
 
+bool search_static(char ** tok_arr , int len){
+    for(int i=0; i<len; i++){
+        if(strcmp(tok_arr[i] , "static") == 0)
+            return true;
+    }
+    return false;
+}
+
+
 char* find_route(char * url){
     int len;
     char ** tok_arr = url_tokens(url , &len);
@@ -142,6 +156,17 @@ char* find_route(char * url){
     if(route_curr)
         return route_curr->source_path;
     
+    if(search_static(tok_arr , len)){
+        char pathname[PATH_LEN];
+        sscanf(url , "/%s" , pathname);
+        int op = open(pathname , O_RDONLY);
+        if( op != -1){
+            close(op);
+            return url;
+            }
+        printf("error here \n\n");
+        
+        }
     return "";
 }
 
