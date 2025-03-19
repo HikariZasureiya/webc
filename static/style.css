@@ -1,7 +1,7 @@
-:root {
-    --bg-color: red;
-}
-
-body {
-    background-color: var(--bg-color);
+.custom-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: green;
+    text-align: center;
+    margin-bottom: 10px;
 }

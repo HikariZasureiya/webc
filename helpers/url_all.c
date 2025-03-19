@@ -155,19 +155,20 @@ char* find_route(char * url){
     path * route_curr = search_url(route_node , tok_arr , len);
     if(route_curr)
         return route_curr->source_path;
-    
     if(search_static(tok_arr , len)){
-        char pathname[PATH_LEN];
-        sscanf(url , "/%s" , pathname);
-        int op = open(pathname , O_RDONLY);
-        if( op != -1){
-            close(op);
-            return url;
-            }
-        printf("error here \n\n");
-        
-        }
+        return url;
+    }
+    if(!strcmp(url , "/favicon.ico")){
+        return url;
+    }
     return "";
 }
 
+char* find_mime(char* url) {
+    char *ext = strrchr(url, '.');
+    if (!ext || *(ext + 1) == '\0') {
+        return NULL;
+    }
+    return ext + 1;
+}
 

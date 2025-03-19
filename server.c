@@ -1,21 +1,23 @@
 /* TODO 
-.check how to send static files
 .HTTP
 */
-
 #include "headers/sock_head.h"
 #include "headers/http_parser.h"
 #include <sys/epoll.h>
 #define MAX_SIZE 16192
+#define MID_SIZE 16192
 #include<fcntl.h>
 #include<errno.h>
 #include<sys/sendfile.h>
 #include"headers/url_register.h"
 #include "headers/url_dist.h"
+#include "resources/mime_types.h"
+#include <sys/stat.h>
 #define MAX_EVENTS 100
 
 struct epoll_event ev, events[MAX_EVENTS];
 path * route_node = NULL;
+HashMap * mime_map = NULL;
 int epollfd, nfds, event_count = 0;
 sock_creds *socket_cred;
 llhttp_ps *ps;
@@ -23,6 +25,16 @@ llhttp_ps *ps;
 
 void sigpipe_handler(int signum) {
     printf("Caught SIGPIPE!\n");
+}
+
+long get_file_size(const char *filename) {
+    struct stat st;
+    if (stat(filename, &st) == 0) {
+        return st.st_size;
+    } else {
+        perror("stat failed");
+        return -1;  
+    }
 }
 
 
@@ -40,23 +52,37 @@ void set_nonblocking(int sock) {
     fcntl(sock, F_SETFL, flag | O_NONBLOCK);
 }
 
-int send_file_to_client(char * filename , int client_sock ){
-    int fptr = open(filename, O_RDONLY);
-    if (!fptr) {
+int send_file_to_client(char * filename , int client_sock  , char* mimetype){
+    char pathname[strlen(filename)+1];
+    if (sscanf(filename, "/%s", pathname) != 1) {
+        strcpy(pathname , filename);
+    }
+
+    int fptr = open(pathname, O_RDONLY);
+    if (fptr == -1) {
         perror("Failed to open file\n");
         return 1;
-        }
+    }
 
-        if (fcntl(client_sock, F_GETFD) == -1 && errno == EBADF) {
-            printf("Skipping send: Socket %d is closed.\n", client_sock);
-            } else {
-                const char *response =
+    long size = get_file_size(pathname);
+    if(size == -1){
+        printf("file size evaluation error \n");
+        return 1;
+    }
+    if (fcntl(client_sock, F_GETFD) == -1 && errno == EBADF) {
+        printf("Skipping send: Socket %d is closed.\n", client_sock);
+        } else {
+                char response[512]; 
+                snprintf(response, sizeof(response),
                     "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Connection: close\r\n\r\n";
+                    "Content-Type: %s\r\n"
+                    "Connection: close\r\n\r\n", 
+                    mimetype ? mimetype : "application/octet-stream"); 
+                
+        
 
                 send(client_sock, response, strlen(response), 0);
-                sendfile(client_sock , fptr , NULL , MAX_SIZE);
+                sendfile(client_sock , fptr , NULL , size);
                 epoll_ctl(epollfd, EPOLL_CTL_DEL, client_sock, NULL);
                 close(client_sock);
         }
@@ -64,8 +90,12 @@ int send_file_to_client(char * filename , int client_sock ){
     return 0;
 }
 
+
+
 int main() {
     register_routes();
+    mimes();
+
     route_dfs(route_node);
     epollfd = epoll_create1(0);
     if (epollfd == -1) {
@@ -106,6 +136,7 @@ int main() {
             if (events[i].data.fd == socket_cred->socket_id) {
                 struct sockaddr_storage client_address;
                 socklen_t client_len = sizeof(client_address);
+
                 // Accept new client
                 int sock_client = accept(socket_cred->socket_id, (struct sockaddr*)&client_address, &client_len);
                 if (sock_client == -1) {
@@ -157,17 +188,15 @@ int main() {
                 snprintf(filename, MAX_SIZE, "%s", find_route(new_creds.url));
                 if(strcmp(filename , "") == 0){
                     printf("file not found\n");
-                    int err = send_file_to_client("templates/err.html" , client_sock);
+                    int err = send_file_to_client("templates/err.html" , client_sock , mime_get("html"));
                     if(err){
                         close(client_sock);
                         continue;
-                    }              
-                   
+                    }                 
                 }
-                    
+
                 else{
-                    printf("filename : %s\n" , filename);
-                    int err = send_file_to_client(filename , client_sock);
+                    int err = send_file_to_client(filename , client_sock , mime_get(find_mime(filename)));
                     if(err){
                         close(client_sock);
                         continue;

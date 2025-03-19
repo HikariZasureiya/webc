@@ -55,9 +55,6 @@ static int find_length(void * key , Keytype type){
     
 }
 
-
-
-
 hmap_str *hmap_str_init(void *key, void *value, Keytype type) {
 
     hmap_str *new = (hmap_str *)calloc(1, sizeof(hmap_str));
@@ -144,7 +141,6 @@ int map_add(HashMap **hmap , void * key , void * value , Keytype type){
             if((*hmap)->map[i]){
                 
                 murmurHash32(((*hmap)->map[i])->key ,  ((*hmap)->map[i])->key_length, seed , &idx);
-                // printf("key: %s , hash :%d %d %d \n" , (char *)(*hmap)->map[i]->key , abs(idx) ,keyval->key_length , seed);
                 int index = abs(idx)%((*hmap)->hlen);
                 if(newblk[index]){
                     while(newblk[index]){
@@ -203,7 +199,6 @@ void * map_get(HashMap **hmap , void * key  ,Keytype type){
 
     int key_length = find_length(key , type);
     if(!(*hmap)){
-        printf("key not found\n");
         return NULL;
     }
     int index = map_has(hmap , key , type);
