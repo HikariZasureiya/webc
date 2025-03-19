@@ -70,8 +70,6 @@ int make_socket(struct addrinfo **bind_address){
 void socket_init( sock_creds ** sock_cred){
   struct addrinfo *bind_address; 
   ret_addrinfo(&bind_address , (*sock_cred)->port);
-  printf(" creating the socket: " ); 
-  
   int socket_listen;
   socket_listen = make_socket(&bind_address);
   (*sock_cred)->socket_id = socket_listen;

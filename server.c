@@ -121,7 +121,8 @@ int main() {
     ps = llhttp_ps_init();
     http_parser_init(ps);
 
-    printf("Waiting for clients...\n");
+    // printf("Waiting for clients...\n");
+
     signal(SIGPIPE, sigpipe_handler);
     signal(SIGINT, interrupt_handler);
 
@@ -152,26 +153,20 @@ int main() {
                     perror("epoll_ctl add client failed");
                     close(sock_client);
                 }
-                printf("New client connected: %d\n", sock_client);
             } else {
                 int client_sock = events[i].data.fd;
-                printf("Client %d is connected\n", client_sock);
-
                 char request[MAX_SIZE] = {0};
                 int tot_size = 0;
                 while (tot_size < MAX_SIZE) {
                     int bytes_rec = recv(client_sock, request + tot_size, MAX_SIZE - tot_size, 0);
                     if (bytes_rec == -1) {
                         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                            printf("Buffer full, waiting...\n");
                             break;
                         } else {
-                            perror("recv failed");
                             break;
                         }
                     }
                     if (bytes_rec == 0) {
-                        printf("\n\nClient %d disconnected...\n", client_sock);
                         epoll_ctl(epollfd, EPOLL_CTL_DEL, client_sock, NULL);
                         close(client_sock);
                         break;

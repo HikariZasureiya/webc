@@ -105,7 +105,6 @@ void register_route(char * url , char * source){
 void route_dfs(path * route_node){
     if(route_node == NULL)
         return;
-    printf(" this is: %s \t %s\n" , route_node->route_name , route_node->source_path);
     for(int i=0; i<route_node->connected_no; i++){
         route_dfs(route_node->connected[i]);
     }   

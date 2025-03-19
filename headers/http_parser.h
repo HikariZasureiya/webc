@@ -23,12 +23,11 @@ llhttp_ps* llhttp_ps_init(){
 }
 
 int completion( llhttp_t* parser){
-  fprintf(stdout , "Message complete\n");
   return  0;
 }
 
 int method( llhttp_t* parser){
-  fprintf(stdout , "method parsed\n");
+  // fprintf(stdout , "method parsed\n");
   return  0;
 }
 
